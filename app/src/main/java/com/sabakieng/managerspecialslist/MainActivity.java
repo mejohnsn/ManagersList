@@ -1,5 +1,6 @@
 package com.sabakieng.managerspecialslist;
 
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -8,35 +9,33 @@ import android.util.Log;
 import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 
 public class MainActivity extends AppCompatActivity {
     String LOGTAG = "MainA";
+    Handler mainActivityHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d(LOGTAG, "Created Activity");
-        jsonToFinal();  // this uses hand-typed version of real JSON for the challenge
     }
 
-    private void jsonToFinal() { // TODO: fix start of string.
+    /**
+     * Final version of code to read JSON, hence the name.
+     * Does everything from opening network connextion to endpoit up
+     * to and including setting SpecialsList array with parsed JSON.
+     * TODO: find better name
+     */
+    private void jsonToFinal() {
         final ObjectMapper mapper = new ObjectMapper();
         try {
-            String purchaseJsonStr =
-                    "{ \"canvasUnit\" : \"16\", \"managerSpecials\" : [{\"display_name\":\"Noodle Dish with Roasted Black Bean Sauce\",\"height\": 8,"
-                            + "\"imageUrl\": \"https://raw.githubusercontent.com/prestoqinc/code-exercise-android/master/images/L.png\",\"original_price\": \"2.00\",\"price\": \"1.00\","
-                            + "\"width\": 16},"
-                            + "{\"display_name\": \"Onion Flavored Rings\", \"height\": 8,\"imageUrl\":"
-                            + "\"https://raw.githubusercontent.com/prestoqinc/code-exercise-android/master/images/J.png\","
-                            + "\"original_price\": \"2.00\", \"price\": \"1.00\","
-                            + "\"width\": 8 },"
-
-                            + " {\"display_name\": \"Kikkoman Less Sodium Soy Sauce\","
-                            + " \"height\": 8,"
-                            + "\"imageUrl\": \"https://raw.githubusercontent.com/prestoqinc/code-exercise-android/master/images/K.png\","
-                            + "\"original_price\": \"2.00\","
-                            + "\"price\": \"1.00\", \"width\": 8 }  ] }";
+            String swiftlyEndpoint = "https://prestoq.com/android-coding-challenge";
+            String purchaseJsonStr = new OkHttpGet().doGetRequest(swiftlyEndpoint);
             Log.d(LOGTAG, "purchaseJsonStr: " + purchaseJsonStr);
             SpecialsList mgrSpecials = mapper.readValue(purchaseJsonStr, SpecialsList.class);
             Log.d(LOGTAG, " Now: canvasUnit: " + mgrSpecials.canvasUnit + "and the array is: "
@@ -44,6 +43,17 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // getting ready to do network:
+        Thread workerThread = new Thread(new Runnable() {
+            public void run() {jsonToFinal();}
+        });
+        // and start the new worker thread:
+        workerThread.start();
     }
 }
 

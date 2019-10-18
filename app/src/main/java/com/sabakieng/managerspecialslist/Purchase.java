@@ -11,5 +11,6 @@ public class Purchase {
 
 
     @Override
-    public String toString() { return " " + display_name + " " + height + " " + price; }// still incomplete.
+    public String toString()
+    { return " " + display_name + " " + height + " " + width + " " + original_price + " " + price + " " + imageUrl; }
 }
